@@ -15,7 +15,7 @@ import (
 
 	"github.com/crossplane/upjet/pkg/terraform"
 
-	"github.com/upbound/upjet-provider-template/apis/v1beta1"
+	"github.com/trois-six/provider-keycloak/apis/v1beta1"
 )
 
 const (
@@ -24,7 +24,21 @@ const (
 	errGetProviderConfig    = "cannot get referenced ProviderConfig"
 	errTrackUsage           = "cannot track ProviderConfig usage"
 	errExtractCredentials   = "cannot extract credentials"
-	errUnmarshalCredentials = "cannot unmarshal template credentials as JSON"
+	errUnmarshalCredentials = "cannot unmarshal keycloak credentials as JSON"
+	// Terraform Provider configuration block keys
+	keyURL                   = "url"
+	keyBasePath              = "base_path"
+	keyClientID              = "client_id"
+	keyClientSecret          = "client_secret"
+	keyUsername              = "username"
+	keyPassword              = "password"
+	keyRealm                 = "realm"
+	keyInitialLogin          = "initial_login"
+	keyClientTimeout         = "client_timeout"
+	keyTLSInsecureSkipVerify = "tls_insecure_skip_verify"
+	keyRootCACertificate     = "root_ca_certificate"
+	keyRedHatSSO             = "red_hat_sso"
+	keyAdditionalHeaders     = "additional_headers"
 )
 
 // TerraformSetupBuilder builds Terraform a terraform.SetupFn function which
@@ -63,10 +77,33 @@ func TerraformSetupBuilder(version, providerSource, providerVersion string) terr
 		}
 
 		// Set credentials in Terraform provider configuration.
-		/*ps.Configuration = map[string]any{
-			"username": creds["username"],
-			"password": creds["password"],
-		}*/
+		ps.Configuration = map[string]any{}
+		configureProvider(creds, &ps)
+
 		return ps, nil
+	}
+}
+
+func configureProvider(creds map[string]string, ps *terraform.Setup) {
+	keys := []string{
+		keyURL,
+		keyBasePath,
+		keyClientID,
+		keyClientSecret,
+		keyUsername,
+		keyPassword,
+		keyRealm,
+		keyInitialLogin,
+		keyClientTimeout,
+		keyTLSInsecureSkipVerify,
+		keyRootCACertificate,
+		keyRedHatSSO,
+		keyAdditionalHeaders,
+	}
+
+	for _, key := range keys {
+		if v, ok := creds[key]; ok {
+			ps.Configuration[key] = v
+		}
 	}
 }
